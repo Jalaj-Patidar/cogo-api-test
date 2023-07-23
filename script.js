@@ -1,4 +1,4 @@
-// JavaScript code for movie list application
+
 
 const apiKey = "b3b26f05";
 const apiUrl = "http://www.omdbapi.com/";
@@ -9,10 +9,13 @@ const searchInput = document.getElementById("searchInput");
 const movieDetailsElement = document.getElementById("movieDetails");
 const ratingAndCommentsElement = document.getElementById("ratingAndComments");
 const commentInput = document.getElementById("commentInput");
+const overlay = document.getElementById("overlay");
+const popup = document.getElementById("popup");
 
 let currentPage = 1;
 let totalResults = 0;
 let movies = [];
+let reviews = [];
 
 // Function to fetch movie data from the OMDB API
 async function fetchMovies(page, searchTerm = "") {
@@ -36,6 +39,7 @@ function renderMovieList() {
     // Click event to show movie details and ratings/comments form
     movieCard.addEventListener("click", () => {
       showMovieDetails(movie);
+      localStorage.setItem("movie_title",movie.Title)
     });
 
     movieListElement.appendChild(movieCard);
@@ -92,19 +96,23 @@ function submitRatingAndComment() {
   const selectedRating = document.querySelector("input[name='rating']:checked");
   const ratingValue = selectedRating ? selectedRating.value : null;
   const commentValue = commentInput.value.trim();
+  
 
   // Store rating and comment in local storage
   if (ratingValue && commentValue) {
     // You can modify the movie object to include the rating and comment properties
     // before saving it in the local storage based on your data structure
+    const assign=localStorage.getItem("movie_title")
+    
     const movie = {
-      // ...movie data from the API,
+      Title: assign,
       rating: ratingValue,
       comment: commentValue
     };
+    reviews.push(movie);
 
     // Save the movie object in local storage
-    localStorage.setItem(movie.Title, JSON.stringify(movie));
+    localStorage.setItem("reviews", JSON.stringify(reviews));
 
     // Clear rating and comment inputs
     selectedRating.checked = false;
@@ -112,6 +120,9 @@ function submitRatingAndComment() {
 
     // Show success message (you can customize this as well)
     alert("Rating and comment submitted successfully!");
+
+    // Display rating and comment in a pop-up
+    displayRatingAndCommentPopup(movie);
   } else {
     alert("Please provide both rating and comment.");
   }
@@ -132,6 +143,34 @@ async function fetchAndRenderMovies() {
     movieListElement.innerHTML = "No movies found.";
     paginationElement.innerHTML = "";
   }
+}
+
+// Function to display rating and comment in a pop-up
+function displayRatingAndCommentPopup(movie) {
+  const popupContent = document.createElement("div");
+  popupContent.innerHTML = `
+    <h2>${movie.Title}</h2>
+    <p>Rating: ${movie.rating}/5</p>
+    <p>Comment: ${movie.comment}</p>
+  `;
+
+  const closeBtn = document.createElement("div");
+  closeBtn.classList.add("close-btn");
+  closeBtn.innerText = "X";
+  closeBtn.addEventListener("click", closePopup);
+
+  popup.innerHTML = "";
+  popup.appendChild(popupContent);
+  popup.appendChild(closeBtn);
+
+  overlay.style.display = "block";
+  popup.style.display = "block";
+}
+
+// Function to close the pop-up
+function closePopup() {
+  overlay.style.display = "none";
+  popup.style.display = "none";
 }
 
 // Event listener for search input
